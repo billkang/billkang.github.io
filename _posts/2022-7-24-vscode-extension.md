@@ -7,7 +7,7 @@
 ##### Electron
 
 vscode 底层通过 electron 开发实现，electron 的核心构成分别是：chromium、nodejs、native-api。
-![vscode-eletron](../images/2022/vscode-eletron.png)
+![vscode-eletron](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-eletron.png)
 
 - Chromium（UI 视图）：通过 web 技术栈编写实现 ui 界面，其与 chrome 的区别是开放开源、无需安装可直接使用（可以简单理解 chromium 是 beta 体验版 chrome，新特性会优先在 chromium 中体验并在稳定后更新至 chrome 中）。
 
@@ -45,7 +45,7 @@ yo code
 
 1. package.json 介绍
 
-```json
+``` json
 {
   "name": "cabinx-extension",
   "displayName": "cabinx-extension",
@@ -134,7 +134,7 @@ onStartupFinished
 
 如何使用这些事件呢？我们以 onCommand 为例。首先需要在 package.json 文件中注册 activationEvents 和 commands。
 
-```json
+``` json
 {
   "activationEvents": ["onCommand:cabinx-extension.newCabinxPage"],
   "main": "./out/extension.js",
@@ -151,7 +151,7 @@ onStartupFinished
 
 然后在 extension.ts 文件的 activate 方法中编写自定义逻辑。
 
-```ts
+``` ts
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
@@ -165,7 +165,7 @@ export function deactivate() {}
 ```
 
 2. 添加目录右键点击事件
-   ![menus](./../images/2022/vsode-menus.png)
+   ![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-menus.png)
 ``` json
 {
   "contributes": {
@@ -182,7 +182,7 @@ export function deactivate() {}
 }
 ```
 3. 唤起组件名称输入面板
-```ts
+``` ts
 // extenson.ts
 import * as vscode from "vscode";
 import { openInputBox } from "./openInputBox";
@@ -207,7 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 ```
 
-```ts
+``` ts
 // openInputBox.ts
 import { window, Uri } from "vscode";
 import { pathExists } from "fs-extra";
@@ -259,11 +259,11 @@ export const openInputBox = (file: Uri): void => {
 
   inputBox.show();
 };
-
 ```
 
 4. 根据输入面板创建模板文件
-```ts
+
+``` ts
 import * as fs from "fs";
 
 export const createTemplate = (path: string, name: string) => {
