@@ -325,11 +325,11 @@ export const createTemplate = (path: string, name: string) => {
 }
 ```
 
-![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-extension-launch.png)
+![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-launch.png)
 
 #### 安装本地构建包
 
-![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-extension-install.png)
+![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-install.png)
 
 
 ### 如何本地打包插件
