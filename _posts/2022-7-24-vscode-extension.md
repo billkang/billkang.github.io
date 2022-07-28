@@ -59,9 +59,10 @@ yo code
 
 #### 插件清单（package.json）
 
-每个 VSCode插件都必须包含一个package.json，它就是插件的配置清单。package.json混合了Node.js字段，如：scripts、dependencies，还加入了一些VSCode独有的字段，如：publisher、activationEvents、contributes等。
+每个 VSCode插件都必须包含一个package.json，它就是插件的配置清单。
+package.json混合了Node.js字段，如：scripts、dependencies，还加入了一些VSCode独有的字段，如：publisher、activationEvents、contributes等。
 
-- name 和 publisher: VSCode 使用<publisher>.<name>作为一个插件的ID。你可以这么理解，newCabinxPage 例子的 ID 就是cabinx-extension.newCabinxPage。VSCode 使用 ID 来区分各个不同的插件。
+- name 和 publisher: VSCode 使用{publisher}.{name}作为一个插件的ID，用来区分各个不同的插件。
 - main: 指定了插件的入口函数。
 - activationEvents：指定触发事件，当指定事件发生时才触发插件执行。
 - contributes：描述插件的拓展点，用于定义插件要扩展 vscode 哪部分功能，如 commands 命令面板、menus 资源管理面板等。
@@ -118,9 +119,9 @@ yo code
 
 #### 声明指令介绍
 
-初始化插件项目成功后会看到上图的目录结构，其中我们需要重点关注 src 目录和 package.json 文件，其中 src 目录下的 extension.ts 文件为入口文件，包含 activate 和 deactivate 分别作为插件启动和插件卸载时的生命周期函数，可以将逻辑直接写在两个函数内也可抽象后在其中调用。
+初始化插件项目成功后，会看到上图的目录结构。其中 src 目录下的 extension.ts 文件为入口文件，包含 activate 和 deactivate 分别作为插件启动和插件卸载时的生命周期函数，可以将逻辑直接写在两个函数内也可抽象后在其中调用。
 
-同时我们希望插件在适当的时机启动 activate 或关闭 deactivate，vscode 也给我们提供了多种 onXXX 的事件作为多种执行时机的入口方法。那么我们该如何使用这些事件呢？
+我们希望插件在适当的时机启动 activate 或关闭 deactivate，vscode 也给我们提供了多种 onXXX 的事件作为多种执行时机的入口方法。
 
 事件列表：
 
@@ -150,7 +151,9 @@ onStartupFinished
 // 在所有插件都被激活后，插件被激活，会影响vscode启动速度，不推荐使用
 ```
 
-如何使用这些事件呢？我们以 onCommand 为例。首先需要在 package.json 文件中注册 activationEvents 和 commands。
+那么我们该如何使用这些事件呢？
+
+我们以 onCommand 为例，首先需要在 package.json 文件中注册 activationEvents 和 commands。
 
 ``` json
 {
@@ -167,38 +170,8 @@ onStartupFinished
 }
 ```
 
-#### 插件入口文件（src/extension.ts）
+添加目录右键点击事件
 
-插件入口文件会导出两个函数，activate 和 deactivate，你注册的激活事件被触发之时执行activate，deactivate则提供了插件关闭前执行清理工作的机会。
-
-vscode模块包含了一个位于node ./node_modules/vscode/bin/install的脚本，这个脚本会拉取package.json中engines.vscode字段定义的VS Code API。这个脚本执行过后，你就得到了智能代码提示，定义跳转等TS特性了。
-
-``` ts
-// 'vscode'模块包含了VS Code extensibility API
-// 按下述方式导入这个模块
-import * as vscode from 'vscode';
-
-// 一旦你的插件激活，vscode会立刻调用下述方法
-export function activate(context: vscode.ExtensionContext) {
-
-  // 用console输出诊断信息(console.log)和错误(console.error)
-  // 下面的代码只会在你的插件激活时执行一次
-  console.log('Congratulations, your extension "my-first-extension" is now active!');
-
-  // 入口命令已经在package.json文件中定义好了，现在调用registerCommand方法
-  // registerCommand中的参数必须与package.json中的command保持一致
-  let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
-    // 把你的代码写在这里，每次命令执行时都会调用这里的代码
-    // ...
-    // 给用户显示一个消息提示
-    vscode.window.showInformationMessage('Hello World!');
-  });
-
-  context.subscriptions.push(disposable);
-}
-```
-
-#### 添加目录右键点击事件
 ![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-menus.png)
 
 ``` json
@@ -217,7 +190,11 @@ export function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-#### 唤起组件名称输入面板
+#### 插件入口文件（src/extension.ts）
+
+插件入口文件会导出两个函数，activate 和 deactivate，你注册的激活事件被触发之时执行activate，deactivate则提供了插件关闭前执行清理工作的机会。
+
+vscode模块包含了一个位于node ./node_modules/vscode/bin/install的脚本，这个脚本会拉取package.json中engines.vscode字段定义的VS Code API。这个脚本执行过后，你就得到了智能代码提示，定义跳转等TS特性了。
 
 ``` ts
 // extenson.ts
@@ -322,6 +299,46 @@ export const createTemplate = (path: string, name: string) => {
     return false;
   }
 };
+```
+
+### 如何本地调试插件
+
+#### 使用launch方式
+可以在项目根目录创建.vscode文件夹，下面创建launch.json文件，然后开启调试功能。
+``` json
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		}
+	]
+}
+```
+
+![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-extension-launch.png)
+
+#### 安装本地构建包
+
+![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-extension-install.png)
+
+
+### 如何本地打包插件
+
+安装vsce进行打包操作。
+
+``` nodejs
+npm i -g vsce
+vsce package
 ```
 
 ### 参考资料
