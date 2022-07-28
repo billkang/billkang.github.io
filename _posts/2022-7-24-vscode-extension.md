@@ -37,7 +37,7 @@ npm install -g yo generator-code
 yo code
 ```
 
-![vscode-eletron](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-yo-code.png)
+![vscode-yo-code](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-yo-code.png)
 
 
 项目目录结构:
@@ -172,7 +172,7 @@ onStartupFinished
 
 添加目录右键点击事件
 
-![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-menus.png)
+![vscode-menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-menus.png)
 
 ``` json
 {
@@ -325,11 +325,11 @@ export const createTemplate = (path: string, name: string) => {
 }
 ```
 
-![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-launch.png)
+![vscode-extension-launch](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-launch.png)
 
 #### 安装本地构建包
 
-![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-install.png)
+![vscode-extension-install](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-install.png)
 
 
 ### 如何本地打包插件
