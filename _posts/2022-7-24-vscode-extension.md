@@ -1,49 +1,73 @@
-## VSCode 插件实践
+## VSCode 插件简介
 
-### 是什么实现了 vscode
+### VSCode底层实现
 
-### 什么是 VSCode 插件
-
-##### Electron
-
-vscode 底层通过 electron 开发实现，electron 的核心构成分别是：chromium、nodejs、native-api。
+VSCode 底层通过 electron 开发实现，electron 的核心构成分别是：chromium、nodejs、native-api。
 ![vscode-eletron](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-eletron.png)
 
 - Chromium（UI 视图）：通过 web 技术栈编写实现 ui 界面，其与 chrome 的区别是开放开源、无需安装可直接使用（可以简单理解 chromium 是 beta 体验版 chrome，新特性会优先在 chromium 中体验并在稳定后更新至 chrome 中）。
-
 - Nodejs（操作桌面文件系统）：通过 node-gyp 编译，主要用来操作文件系统和调用本地网络。
-
 - Native-API（操作系统纬度 API）：使用 Nodejs-C++ Addon 调用操作系统 API（Nodejs-C++ Addon 插件是一种动态链接库，采用 C/C++语言编写，可以通过 require()将插件加载进 NodeJS 中进行使用），可以理解是对 Nodejs 接口的能力拓展。
 
-### 插件能做什么
 
-我们看看使用插件 API 能做些什么：
+### VSCode插件能做什么
 
-- 改变 VS Code 的颜色和图标主题
+- 改变 VSCode 的颜色和图标主题
 - 在 UI 中添加自定义组件和视图
 - 创建 Webview，使用 HTML/CSS/JS 显示自定义网页
 - 支持新的编程语言
 - 支持特定运行时的调试
 
-### 环境准备
+
+### 开发一个简单的插件
+
+#### 环境准备
 
 - nodejs
 - vscode
-- 安装 yeoman 和 VS Code Extension Generator
+- 安装 yeoman 和 VSCode Extension Generator
 
 ```
 npm install -g yo generator-code
 ```
 
-- 初始化项目工程
+#### 初始化项目工程
 
 ```
 yo code
 ```
 
-### 具体实现
+![vscode-eletron](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-yo-code.png)
 
-1. package.json 介绍
+
+项目目录结构:
+
+```
+.
+├── .vscode
+│   ├── launch.json     // 插件加载和调试的配置
+│   └── tasks.json      // 配置TypeScript编译任务
+├── .gitignore          // 忽略构建输出和node_modules文件
+├── README.md           // 一个友好的插件文档
+├── src
+│   └── extension.ts    // 插件源代码
+├── package.json        // 插件配置清单
+├── tsconfig.json       // TypeScript配置
+
+```
+
+
+#### 插件清单（package.json）
+
+每个 VSCode插件都必须包含一个package.json，它就是插件的配置清单。package.json混合了Node.js字段，如：scripts、dependencies，还加入了一些VSCode独有的字段，如：publisher、activationEvents、contributes等。
+
+- name 和 publisher: VSCode 使用<publisher>.<name>作为一个插件的ID。你可以这么理解，newCabinxPage 例子的 ID 就是cabinx-extension.newCabinxPage。VSCode 使用 ID 来区分各个不同的插件。
+- main: 指定了插件的入口函数。
+- activationEvents：指定触发事件，当指定事件发生时才触发插件执行。
+- contributes：描述插件的拓展点，用于定义插件要扩展 vscode 哪部分功能，如 commands 命令面板、menus 资源管理面板等。
+- engines.vscode: 描述了这个插件依赖的最低VSCode API版本。
+- postinstall 脚本: 如果你的engines.vscode声明的是1.25版的VSCode API，那它就会按照这个声明去安装目标版本。一旦vscode.d.ts文件存在于node_modules/vscode/vscode.d.ts，IntelliSense就会开始运作，你就可以对所有VSCode API进行定义跳转或者语法检查了。
+
 
 ``` json
 {
@@ -92,13 +116,7 @@ yo code
 }
 ```
 
-- main: 指定了插件的入口函数。
-
-- activationEvents：指定触发事件，当指定事件发生时才触发插件执行。需额外关注\*这个特殊的插件类型，因为他在初始化完成后就会触发插件执行，并不需要任何自定义触发事件。
-
-- contributes：描述插件的拓展点，用于定义插件要扩展 vscode 哪部分功能，如 commands 命令面板、menus 资源管理面板等。
-
-1. 声明指令
+#### 声明指令介绍
 
 初始化插件项目成功后会看到上图的目录结构，其中我们需要重点关注 src 目录和 package.json 文件，其中 src 目录下的 extension.ts 文件为入口文件，包含 activate 和 deactivate 分别作为插件启动和插件卸载时的生命周期函数，可以将逻辑直接写在两个函数内也可抽象后在其中调用。
 
@@ -149,23 +167,40 @@ onStartupFinished
 }
 ```
 
-然后在 extension.ts 文件的 activate 方法中编写自定义逻辑。
+#### 插件入口文件（src/extension.ts）
+
+插件入口文件会导出两个函数，activate 和 deactivate，你注册的激活事件被触发之时执行activate，deactivate则提供了插件关闭前执行清理工作的机会。
+
+vscode模块包含了一个位于node ./node_modules/vscode/bin/install的脚本，这个脚本会拉取package.json中engines.vscode字段定义的VS Code API。这个脚本执行过后，你就得到了智能代码提示，定义跳转等TS特性了。
 
 ``` ts
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from "vscode";
+// 'vscode'模块包含了VS Code extensibility API
+// 按下述方式导入这个模块
+import * as vscode from 'vscode';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {}
+// 一旦你的插件激活，vscode会立刻调用下述方法
+export function activate(context: vscode.ExtensionContext) {
 
-// this method is called when your extension is deactivated
-export function deactivate() {}
+  // 用console输出诊断信息(console.log)和错误(console.error)
+  // 下面的代码只会在你的插件激活时执行一次
+  console.log('Congratulations, your extension "my-first-extension" is now active!');
+
+  // 入口命令已经在package.json文件中定义好了，现在调用registerCommand方法
+  // registerCommand中的参数必须与package.json中的command保持一致
+  let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
+    // 把你的代码写在这里，每次命令执行时都会调用这里的代码
+    // ...
+    // 给用户显示一个消息提示
+    vscode.window.showInformationMessage('Hello World!');
+  });
+
+  context.subscriptions.push(disposable);
+}
 ```
 
-2. 添加目录右键点击事件
-   ![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-menus.png)
+#### 添加目录右键点击事件
+![menus](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vsode-menus.png)
+
 ``` json
 {
   "contributes": {
@@ -181,7 +216,9 @@ export function deactivate() {}
   },
 }
 ```
-3. 唤起组件名称输入面板
+
+#### 唤起组件名称输入面板
+
 ``` ts
 // extenson.ts
 import * as vscode from "vscode";
@@ -261,7 +298,7 @@ export const openInputBox = (file: Uri): void => {
 };
 ```
 
-4. 根据输入面板创建模板文件
+#### 根据输入面板创建模板文件
 
 ``` ts
 import * as fs from "fs";
@@ -285,7 +322,6 @@ export const createTemplate = (path: string, name: string) => {
     return false;
   }
 };
-
 ```
 
 ### 参考资料
