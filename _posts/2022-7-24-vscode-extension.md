@@ -11,11 +11,19 @@ VSCode 底层通过 electron 开发实现，electron 的核心构成分别是：
 
 ### VSCode 插件能做什么
 
-- 改变 VSCode 的颜色和图标主题
-- 在 UI 中添加自定义组件和视图
-- 创建 Webview，使用 HTML/CSS/JS 显示自定义网页
-- 支持新的编程语言
-- 支持特定运行时的调试
+vscode插件其实就是类似于一个npm包的vsix文件，其可以实现的功能大概可以分为以下几类：
+
+1. 不受限的本地磁盘访问
+2. 自定义命令、快捷键、菜单
+3. 自定义跳转、自动补全、悬浮提示
+4. 自定义插件设置、自定义插件欢迎页
+5. 自定义WebView
+6. 自定义左侧功能面板
+7. 自定义颜色、图标主题
+8. 新增语言支持（代码高亮、语法解析、折叠、跳转、补全等）
+9. Markdown增强
+10. 其他（比如状态栏修改、通知提示、编辑器控制、git源代码控制、任务定义、Language Server、Debug Adapter等等）
+
 
 ### 开发一个简单的插件
 
@@ -34,6 +42,17 @@ npm install -g yo generator-code
 ```
 yo code
 ```
+
+创建项目会开启一个交互命令行，会让你选择你想创建的插件类型，目前支持以下几种类型：
+1. New Extension (TypeScript) ：ts语法的项目，基础版，内置了hello world的命令
+2. New Extension (JavaScript) : js语法的项目，基础版，内置了hello world的命令
+3. New Color Theme ：主题项目，内置了主题，可用来自定义主题
+4. New Language Support：语言支持项目，内置了语法支持配置，可用来支持特殊语言
+5. New Code Snippets：代码片段项目，内置了代码片段配置，可用来配置代码片段，输入触发字符，快速生成代码片段
+6. New Keymap：快捷键项目，内置了快捷键配置，可用来自定义快捷键行为
+7. New Extension Pack：插件集合项目，内置了插件集合配置，可用于定制插件集，达到快速安装一组插件
+8. New Language Pack (Localization)：目前官方文档暂未查到localizations贡献的场景点
+
 
 ![vscode-yo-code](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-yo-code.png)
 
@@ -116,35 +135,22 @@ package.json 混合了 Node.js 字段，如：scripts、dependencies，还加入
 
 初始化插件项目成功后，会看到上图的目录结构。其中 src 目录下的 extension.ts 文件为入口文件，包含 activate 和 deactivate 分别作为插件启动和插件卸载时的生命周期函数，可以将逻辑直接写在两个函数内也可抽象后在其中调用。
 
-我们希望插件在适当的时机启动 activate 或关闭 deactivate，vscode 也给我们提供了多种 onXXX 的事件作为多种执行时机的入口方法。
+我们希望插件在适当的时机启动 activate 或关闭 deactivate，vscode 也给我们提供了多种 onXXX 的事件作为多种执行时机的入口方法。我可以通过配置activationEvents实现插件触发动作。
 
-事件列表：
-
-```js
-// 当打开特定语言时，插件被激活
-onLanguage;
-// 当调用命令时，插件被激活
-onCommand;
-// 当调试时，插件被激活
-onDebug;
-// 打开文件夹且该文件夹包含设置的文件名模式时，插件被激活
-workspaceContains;
-// 每当读取特定文件夹 or 文件时，插件被激活
-onFileSystem;
-// 在侧边栏展开指定id的视图时，插件被激活
-onView;
-// 在基于vscode或 vscode-insiders协议的url打开时（类似schema），插件被激活
-onUri;
-// 在打开自定义设置viewType的 webview 时，插件被激活
-onWebviewPanel;
-// 在打开自定义设置viewType的自定义编辑器，插件被激活
-onCustomEditor;
-// 每当扩展请求具有authentication.getSession()匹配的providerId时，插件被激活
-onAuthenticationRequest;
-// 在vscode启动一段时间后，插件被激活，类似 * 但不会影响vscode启动速度
-onStartupFinished;
-// 在所有插件都被激活后，插件被激活，会影响vscode启动速度，不推荐使用
-```
+可配置项包括以下几类：
+- onLanguage：打开特定语言文件时激活事件和相关插件
+- onCommand：调用命令时激活
+- onDebug：调试会话(debug session)启动前激活
+  - onDebugInitialConfigurations
+  - onDebugResolve
+- workspaceContains：文件夹打开后，且文件夹中至少包含一个符合glob模式的文件时触发
+- onFileSystem： 以协议（scheme）打开文件或文件夹时触发。通常是file-协议，也可以用自定义的文件供应器函数替换掉，比如ftp、ssh.h
+- onView：每当在VS Code侧栏中展开指定ID的视图时
+- onUri：插件的系统级URI打开时触发。这个URI协议需要带上vscode或者 vscode-insiders协议。URI主机名必须是插件的唯一标识，剩余的URI是可选的
+- onWebviewPanel： VS Code需要恢复匹配到viewType的webview视图时触发
+- onCustomEditor：当VS Code需要使用匹配的viewType创建自定义编辑器时触发
+- *：当VS Code启动时触发，性能会变差，不建议使用
+- onStartupFinished： VS Code启动一定时间后触发，和上述*效果类似，但性能更好一些
 
 那么我们该如何使用这些事件呢？
 
@@ -320,6 +326,17 @@ export const createTemplate = (path: string, name: string) => {
 
 ![vscode-extension-launch](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-launch.png)
 
+
+1. 点击运行Run Extension后，会自动打开一个新的vscode界面，此时这个新打开的vscode，会自动安装我们开发的插件，vscode头部会展示[Extension Development Host]
+2. 此时我们在这个界面调试插件功能，如果需要测试代码，我们可以在此vscode新建一个本地项目或者打开已有项目测试
+3. 我们写的console相关日志，可以在DEBUG CONSOLE面板中查看，也可以在运行过程中增删断点，如下：
+![vscode-extension-launch](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-debugger.png)
+4. 如果修改了插件内容，webpack会自动监听并编译
+5. 打开的[Extension Development Host]的vscode调试页面如何更新修改呢？
+   - 方法一：断开并重新执行
+   - 方法二：在此界面按住command+R，则会自动重启并应用，推荐
+
+
 #### 安装本地构建包
 
 ![vscode-extension-install](https://raw.githubusercontent.com/billkang/billkang.github.io/master/images/2022/vscode-extension-install.png)
@@ -338,3 +355,13 @@ vsce package
 [VSCode 插件文档](https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/get-started/your-first-extension)
 
 [vscode 插件原理浅析与实战](https://mp.weixin.qq.com/s/e0Mmed5aB39EE-RzFUQI5g)
+
+[vscode插件开发指南(一)-理论篇](https://juejin.cn/post/6960626872791072798)
+
+[vscode插件开发指南（二）-实战篇-搭建项目](https://juejin.cn/post/6961370277682872351)
+
+[vscode插件开发指南（三）-实战篇-语法校验实现](https://juejin.cn/post/6961689956347543589)
+
+[vscode插件开发指南（四）-实战篇-自动补全实现](https://juejin.cn/post/6963617930714021924)
+
+[vscode插件开发指南（五）-实战篇-悬停语法提示&webview-完结篇](https://juejin.cn/post/6963954849671020558)
